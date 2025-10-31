@@ -1,4 +1,6 @@
-# Getting Started with Create React App
+# Board Game Frontend (fe_board01)
+
+체스와 유사한 2인 대국 보드게임의 프론트엔드 애플리케이션입니다.
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

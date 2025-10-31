@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Simulation",
+  "name": "Simulation - 실시간 멀티플레이어 통신",
   "icons": [
     {
       "src": "favicon.ico",
