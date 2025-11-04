@@ -184,3 +184,138 @@
   color: #666;
   margin: 0;
 }
+
+/* Ready Section Styles */
+.ready-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.random-button {
+  background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.random-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+}
+
+.ready-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.3em;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.ready-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+}
+
+.ready-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #ccc;
+}
+
+.ready-status {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 2px solid #28a745;
+  padding: 15px 30px;
+  border-radius: 10px;
+  color: #28a745;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+/* Players Status Display */
+.players-status {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 350px;
+}
+
+.player-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 8px;
+  background-color: rgba(102, 126, 234, 0.05);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.player-status.me {
+  border-color: #667eea;
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.player-label {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.status-indicator {
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.status-indicator.ready {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-indicator.not-ready {
+  background-color: #ffc107;
+  color: #333;
+}
+
+/* Game Layout for SETUP phase */
+.game-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+}
+
+.game-layout.reverse-layout {
+  flex-direction: row-reverse;
+}
+
+.board-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}

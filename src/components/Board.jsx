@@ -161,6 +161,11 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
     pieces.forEach(piece => {
       if (piece.captured) return;
 
+      // Skip pieces that haven't been placed yet (position is null)
+      if (!piece.position || piece.position.x === null || piece.position.x === undefined) {
+        return;
+      }
+
       const x = getCanvasX(piece.position.x);
       const y = getCanvasY(piece.position.y);
 
@@ -183,11 +188,20 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
       }
       ctx.closePath();
 
+      // Check if piece is hidden (opponent piece)
+      const isHidden = !piece.type || piece.color !== playerColor;
+
       // Fill color based on piece color
-      if (piece.color === 'RED') {
-        ctx.fillStyle = '#d32f2f'; // Red
+      if (isHidden) {
+        // Hidden piece - show as gray/dark color
+        ctx.fillStyle = piece.color === 'RED' ? '#8B4513' : '#4A5568';
       } else {
-        ctx.fillStyle = '#2196F3'; // Blue
+        // Visible piece - show normal colors
+        if (piece.color === 'RED') {
+          ctx.fillStyle = '#d32f2f'; // Red
+        } else {
+          ctx.fillStyle = '#2196F3'; // Blue
+        }
       }
       ctx.fill();
 
@@ -196,8 +210,33 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      if (!isHidden && piece.type) {
+        // Draw piece symbol and name for visible piece
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFFFF'; // White text
+        ctx.strokeStyle = '#000'; // Black outline for text
+
+        // Draw symbol (top, larger)
+        if (piece.type.symbol) {
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textBaseline = 'middle';
+          ctx.lineWidth = 0.5;
+          ctx.strokeText(piece.type.symbol, x, y - 6);
+          ctx.fillText(piece.type.symbol, x, y - 6);
+        }
+
+        // Draw korean name (bottom, smaller)
+        if (piece.type.koreanName) {
+          ctx.font = 'bold 8px sans-serif';
+          ctx.textBaseline = 'top';
+          ctx.lineWidth = 0.3;
+          ctx.strokeText(piece.type.koreanName, x, y + 6);
+          ctx.fillText(piece.type.koreanName, x, y + 6);
+        }
+      }
+
       // Highlight selected piece
-      if (selectedPiece &&
+      if (selectedPiece && selectedPiece.position &&
           selectedPiece.position.x === piece.position.x &&
           selectedPiece.position.y === piece.position.y) {
         ctx.beginPath();
@@ -222,12 +261,7 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
     });
   };
 
-  const handleCanvasClick = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-
+  const findClosestGridPosition = (clickX, clickY) => {
     // Find closest grid position
     let minDist = Infinity;
     let closestX = 0;
@@ -278,6 +312,17 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
         }
       }
     }
+
+    return { closestX, closestY, minDist };
+  };
+
+  const handleCanvasClick = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    const { closestX, closestY, minDist } = findClosestGridPosition(clickX, clickY);
 
     // Only accept clicks within reasonable distance
     if (minDist < cellSize / 2) {
