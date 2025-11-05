@@ -141,6 +141,17 @@
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
 }
 
+.join-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(102, 126, 234, 0.2);
+}
+
 .room-id-input {
   padding: 15px 20px;
   font-size: 1.2em;

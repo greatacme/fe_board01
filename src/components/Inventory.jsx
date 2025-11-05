@@ -121,8 +121,8 @@ const Inventory = ({ pieces, onInventoryClick, playerColor, selectedPiece, isPla
     piecesToDisplay.forEach((piece, visualIndex) => {
       let index;
       if (isPlaying) {
-        // For captured pieces, use sequential index
-        index = visualIndex;
+        // For captured pieces, use inventoryIndex if available, otherwise sequential
+        index = piece.inventoryIndex !== undefined ? piece.inventoryIndex : visualIndex;
       } else {
         // For setup, use inventoryIndex
         index = piece.inventoryIndex;
@@ -134,8 +134,8 @@ const Inventory = ({ pieces, onInventoryClick, playerColor, selectedPiece, isPla
       const y = row * cellSize;
       drawPiece(piece, ctx, x, y, cellSize);
 
-      // Highlight selected piece with green border (only during setup)
-      if (!isPlaying && selectedPiece && selectedPiece.id === piece.id) {
+      // Highlight selected piece with green border
+      if (selectedPiece && selectedPiece.id === piece.id) {
         const centerX = x + cellSize / 2;
         const centerY = y + cellSize / 2;
 
@@ -174,11 +174,21 @@ const Inventory = ({ pieces, onInventoryClick, playerColor, selectedPiece, isPla
     const row = Math.floor(clickY / cellSize);
     const clickedIndex = row * cols + col;
 
-    // Find piece at this inventory position using inventoryIndex
-    const piece = pieces.find(p =>
-      (!p.position || p.position === null || p.position === undefined) &&
-      p.inventoryIndex === clickedIndex
-    );
+    let piece = null;
+
+    if (isPlaying) {
+      // During PLAYING: find captured piece at this inventory position
+      piece = pieces.find(p =>
+        p.captured && p.color !== playerColor &&
+        p.inventoryIndex === clickedIndex
+      );
+    } else {
+      // During SETUP: find piece in inventory (not yet placed)
+      piece = pieces.find(p =>
+        (!p.position || p.position === null || p.position === undefined) &&
+        p.inventoryIndex === clickedIndex
+      );
+    }
 
     // Call handler with piece (null if empty area) and clicked index
     if (onInventoryClick) {
@@ -200,7 +210,7 @@ const Inventory = ({ pieces, onInventoryClick, playerColor, selectedPiece, isPla
         <p className="inventory-hint">말을 클릭하여 선택 → 보드에 배치 | 보드 말 선택 → 인벤토리 원하는 빈 공간 클릭으로 이동</p>
       )}
       {isPlaying && (
-        <p className="inventory-hint">상대방에게서 따낸 말들</p>
+        <p className="inventory-hint">상대방에게서 따낸 말들 | 말 클릭 → 다른 위치 클릭으로 재배치</p>
       )}
     </div>
   );

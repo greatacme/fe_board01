@@ -15,7 +15,6 @@ const Game = () => {
   const [playerColor, setPlayerColor] = useState(null);
   const [message, setMessage] = useState('');
   const [gameStarted, setGameStarted] = useState(false);
-  const [mode, setMode] = useState(null); // 'create' or 'join'
   const [inputRoomId, setInputRoomId] = useState('');
   const [selectedInventoryPiece, setSelectedInventoryPiece] = useState(null);
   const [isReady, setIsReady] = useState(false);
@@ -80,22 +79,24 @@ const Game = () => {
   }, [stompClient, connected, playerColor, roomId]);
 
   useEffect(() => {
-    if (stompClient && connected && stompClient.connected && roomId) {
-      const subscription = stompClient.subscribe(`/topic/game.${roomId}`, (message) => {
+    if (stompClient && connected && stompClient.connected && roomId && playerColor) {
+      // Subscribe to color-specific topic
+      const topic = `/topic/game.${roomId}.${playerColor}`;
+      console.log('🔔 Subscribing to:', topic);
+
+      const subscription = stompClient.subscribe(topic, (message) => {
         const state = JSON.parse(message.body);
-        console.log('시뮬레이션 상태 업데이트:', state);
+        console.log('✅ 시뮬레이션 상태 업데이트 수신:', state);
         setGameState(state);
         if (state.message) {
           setMessage(state.message);
         }
-
-        // Determine player color
-        if (!playerColor && state.pieces && state.pieces.length > 0) {
-          setPlayerColor(state.currentTurn);
-        }
       });
 
+      console.log('✅ Successfully subscribed to:', topic);
+
       return () => {
+        console.log('🔕 Unsubscribing from:', topic);
         subscription.unsubscribe();
       };
     }
@@ -294,10 +295,28 @@ const Game = () => {
         const prevMap = new Map(prev.map(p => [p.id, p]));
 
         // Update pieces from gameState, preserving inventoryIndex
-        const updatedPieces = gameState.pieces.map(p => ({
-          ...p,
-          inventoryIndex: prevMap.get(p.id)?.inventoryIndex
-        }));
+        const updatedPieces = gameState.pieces.map((p, index) => {
+          let inventoryIndex = prevMap.get(p.id)?.inventoryIndex;
+
+          // Assign inventoryIndex to newly captured pieces
+          if (p.captured && inventoryIndex === undefined) {
+            // Find the next available inventory slot
+            const usedIndices = new Set(
+              prev.filter(piece => piece.captured && piece.inventoryIndex !== undefined)
+                .map(piece => piece.inventoryIndex)
+            );
+            let nextIndex = 0;
+            while (usedIndices.has(nextIndex)) {
+              nextIndex++;
+            }
+            inventoryIndex = nextIndex;
+          }
+
+          return {
+            ...p,
+            inventoryIndex
+          };
+        });
 
         // Add pieces that are not in gameState yet (only during SETUP)
         if (gameState.status === 'SETUP') {
@@ -420,6 +439,38 @@ const Game = () => {
       console.log('Moving piece to inventory position:', clickedIndex);
       await moveToInventoryPosition(selectedInventoryPiece, clickedIndex);
     }
+  };
+
+  const handleCapturedPieceInventoryClick = (clickedPiece, clickedIndex) => {
+    // If clicked on a captured piece, select it
+    if (clickedPiece) {
+      setSelectedInventoryPiece(clickedPiece);
+      setMessage(`${clickedPiece.type.koreanName} 선택됨. 다른 위치로 이동하세요.`);
+      return;
+    }
+
+    // If clicked on empty area and a piece is selected, move it to that position
+    if (!clickedPiece && selectedInventoryPiece) {
+      moveCapturedPieceInInventory(selectedInventoryPiece, clickedIndex);
+    }
+  };
+
+  const moveCapturedPieceInInventory = (piece, targetIndex) => {
+    console.log('=== moveCapturedPieceInInventory ===');
+    console.log('piece:', piece);
+    console.log('targetIndex:', targetIndex);
+
+    // Update the piece's inventoryIndex locally
+    setAllPieces(prev =>
+      prev.map(p =>
+        p.id === piece.id
+          ? { ...p, inventoryIndex: targetIndex }
+          : p
+      )
+    );
+
+    setSelectedInventoryPiece(null);
+    setMessage(`${piece.type.koreanName}이(가) 인벤토리 위치 ${targetIndex}로 이동했습니다`);
   };
 
   const moveToInventoryPosition = async (piece, targetIndex) => {
@@ -618,45 +669,16 @@ const Game = () => {
 
       {!gameStarted ? (
         <div className="start-screen">
-          {!mode ? (
-            <div className="mode-selection">
-              <h2>Simulation 시작</h2>
-              <button
-                className="mode-button create-button"
-                onClick={() => setMode('create')}
-                disabled={!connected}
-              >
-                새 Simulation 생성
-              </button>
-              <button
-                className="mode-button join-button"
-                onClick={() => setMode('join')}
-                disabled={!connected}
-              >
-                Simulation 참가
-              </button>
-              {!connected && <p className="warning">서버 연결 중...</p>}
-            </div>
-          ) : mode === 'create' ? (
-            <div className="create-room">
-              <h2>새 Simulation 생성</h2>
-              <p>새로운 시뮬레이션을 생성합니다</p>
-              <button
-                className="start-button"
-                onClick={handleCreateRoom}
-              >
-                생성
-              </button>
-              <button
-                className="back-button"
-                onClick={() => setMode(null)}
-              >
-                뒤로
-              </button>
-            </div>
-          ) : (
-            <div className="join-room">
-              <h2>Simulation 참가</h2>
+          <div className="mode-selection">
+            <h2>Simulation 시작</h2>
+            <button
+              className="mode-button create-button"
+              onClick={handleCreateRoom}
+              disabled={!connected}
+            >
+              새 Simulation 생성
+            </button>
+            <div className="join-section">
               <input
                 type="text"
                 className="room-id-input"
@@ -666,19 +688,15 @@ const Game = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleJoinRoom()}
               />
               <button
-                className="start-button"
+                className="mode-button join-button"
                 onClick={handleJoinRoom}
+                disabled={!connected}
               >
-                참가
-              </button>
-              <button
-                className="back-button"
-                onClick={() => setMode(null)}
-              >
-                뒤로
+                Simulation 참가
               </button>
             </div>
-          )}
+            {!connected && <p className="warning">서버 연결 중...</p>}
+          </div>
         </div>
       ) : gameState ? (
         gameState.status === 'SETUP' ? (
@@ -746,9 +764,9 @@ const Game = () => {
           <div className={`game-layout ${playerColor === 'BLUE' ? 'reverse-layout' : ''}`}>
             <Inventory
               pieces={allPieces}
-              onInventoryClick={() => {}} // No interaction during playing
+              onInventoryClick={handleCapturedPieceInventoryClick}
               playerColor={playerColor}
-              selectedPiece={null}
+              selectedPiece={selectedInventoryPiece}
               isPlaying={true}
             />
             <Board
