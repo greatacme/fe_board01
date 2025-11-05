@@ -188,8 +188,9 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
       }
       ctx.closePath();
 
-      // Check if piece is hidden (opponent piece)
-      const isHidden = !piece.type || piece.color !== playerColor;
+      // Check if piece is hidden (opponent piece that is not revealed)
+      // Revealed pieces show their type even if they belong to opponent
+      const isHidden = !piece.type || (piece.color !== playerColor && !piece.revealed);
 
       // Fill color based on piece color
       if (isHidden) {
@@ -205,9 +206,14 @@ const Board = ({ pieces, onPieceClick, selectedPiece, currentTurn, playerColor }
       }
       ctx.fill();
 
-      // Draw border
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
+      // Draw border - use orange for revealed own pieces
+      if (piece.color === playerColor && piece.revealed) {
+        ctx.strokeStyle = '#FF9800'; // Orange for revealed own pieces (shown to opponent)
+        ctx.lineWidth = 3; // Slightly thicker to make it more visible
+      } else {
+        ctx.strokeStyle = '#000'; // Black for normal pieces
+        ctx.lineWidth = 2;
+      }
       ctx.stroke();
 
       if (!isHidden && piece.type) {
