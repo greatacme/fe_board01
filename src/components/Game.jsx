@@ -5,6 +5,8 @@ import Board from './Board';
 import Inventory from './Inventory';
 import './Game.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const Game = () => {
   const [stompClient, setStompClient] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -21,7 +23,7 @@ const Game = () => {
   const [allPieces, setAllPieces] = useState([]); // All pieces including those in inventory
 
   const connect = useCallback(() => {
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(`${API_URL}/ws`);
     const client = new Client({
       webSocketFactory: () => socket,
       onConnect: () => {
@@ -148,7 +150,7 @@ const Game = () => {
     setMessage('Simulation을 생성하는 중...');
 
     try {
-      const response = await fetch('http://localhost:8080/api/game/rooms', {
+      const response = await fetch(`${API_URL}/api/game/rooms`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +206,7 @@ const Game = () => {
     setMessage('Simulation에 참가하는 중...');
 
     try {
-      const response = await fetch(`http://localhost:8080/api/game/rooms/${inputRoomId.trim()}/join`, {
+      const response = await fetch(`${API_URL}/api/game/rooms/${inputRoomId.trim()}/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -251,7 +253,7 @@ const Game = () => {
     console.log('playerId:', playerId);
 
     try {
-      const url = `http://localhost:8080/api/game/rooms/${roomIdParam}/initial-pieces?playerId=${playerId}`;
+      const url = `${API_URL}/api/game/rooms/${roomIdParam}/initial-pieces?playerId=${playerId}`;
       console.log('Fetching URL:', url);
 
       const response = await fetch(url);
@@ -391,7 +393,7 @@ const Game = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/game/rooms/${roomId}/place-piece`, {
+      const response = await fetch(`${API_URL}/api/game/rooms/${roomId}/place-piece`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -489,7 +491,7 @@ const Game = () => {
 
       console.log('Request body:', JSON.stringify(requestBody));
 
-      const response = await fetch(`http://localhost:8080/api/game/rooms/${roomId}/place-piece`, {
+      const response = await fetch(`${API_URL}/api/game/rooms/${roomId}/place-piece`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -576,7 +578,7 @@ const Game = () => {
         const piece = piecesToPlace[i];
         const position = shuffledPositions[i];
 
-        const response = await fetch(`http://localhost:8080/api/game/rooms/${roomId}/place-piece`, {
+        const response = await fetch(`${API_URL}/api/game/rooms/${roomId}/place-piece`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -617,7 +619,7 @@ const Game = () => {
     if (!roomId) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/game/rooms/${roomId}/ready`, {
+      const response = await fetch(`${API_URL}/api/game/rooms/${roomId}/ready`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
